@@ -17,6 +17,10 @@ function listTodos() {
   }); 
 }
 
+
+function deleteTodo(id: string) {
+  client.models.Todo.delete({ id })
+}
 function createTodo() {
   client.models.Todo.create({
     content: window.prompt("Todo content")
@@ -40,7 +44,9 @@ function createTodo() {
     <ul>
       <li 
         v-for="todo in todos" 
-        :key="todo.id">
+        :key="todo.id"
+        @click="deleteTodo(todo.id)"
+      >
         {{ todo.content }}
       </li>
     </ul>
