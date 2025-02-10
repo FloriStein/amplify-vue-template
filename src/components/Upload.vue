@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { uploadData } from "aws-amplify/storage";
+import { ref, onMounted } from "vue";
+import { uploadData, listData } from "aws-amplify/storage";
 
 const fileInput = ref<HTMLInputElement | null>(null);
+const fileList = ref<string[]>([]);
 
 const triggerFileSelect = () => {
   fileInput.value?.click();
@@ -27,16 +28,31 @@ const uploadFile = async (event: Event) => {
         path: `picture-submissions/${selectedFile.name}`,
       });
       console.log("Upload erfolgreich!");
+      fetchFileList();
     } catch (error) {
       console.error("Fehler beim Hochladen", error);
     }
   };
 };
+
+const fetchFileList = async () => {
+  try {
+    const { items } = await listData({ path: "picture-submissions/" });
+    fileList.value = items.map(item => item.path);
+  } catch (error) {
+    console.error("Fehler beim Laden der Dateien", error);
+  }
+};
+
+onMounted(fetchFileList);
 </script>
 
 <template>
   <div>
     <input type="file" ref="fileInput" @change="uploadFile" style="display: none" />
     <button @click="triggerFileSelect">Datei auswählen & Hochladen</button>
+    <ul>
+      <li v-for="file in fileList" :key="file">{{ file }}</li>
+    </ul>
   </div>
 </template>
