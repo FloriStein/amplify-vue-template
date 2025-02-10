@@ -3,13 +3,16 @@
 import { Authenticator } from "@aws-amplify/ui-vue";
 import "@aws-amplify/ui-vue/styles.css";
 import Todos from './components/Todos.vue'
+import Upload from './components/Upload.vue'
+
 </script>
 
 <template>
   <main>
     <authenticator>
       <template v-slot="{ signOut }">
-        <Todos />
+        <!-- <Todos /> -->
+        <Upload />
         <button @click="signOut">Sign Out</button>
       </template>
     </authenticator>
