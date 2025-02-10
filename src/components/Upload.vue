@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { uploadData, listData } from "aws-amplify/storage";
+import { uploadData, list } from "aws-amplify/storage";
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const fileList = ref<string[]>([]);
@@ -37,8 +37,8 @@ const uploadFile = async (event: Event) => {
 
 const fetchFileList = async () => {
   try {
-    const { items } = await listData({ path: "picture-submissions/" });
-    fileList.value = items.map(item => item.path);
+    const { results } = await list("picture-submissions/");
+    fileList.value = results.map(item => item.key);
   } catch (error) {
     console.error("Fehler beim Laden der Dateien", error);
   }
