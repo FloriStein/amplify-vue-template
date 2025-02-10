@@ -5,6 +5,7 @@ import { uploadData, list } from "aws-amplify/storage";
 const fileInput = ref<HTMLInputElement | null>(null);
 const fileList = ref<string[]>([]);
 
+
 const triggerFileSelect = () => {
   fileInput.value?.click();
 };
@@ -37,8 +38,8 @@ const uploadFile = async (event: Event) => {
 
 const fetchFileList = async () => {
   try {
-    const { results } = await list("picture-submissions/");
-    fileList.value = results.map(item => item.key);
+    const response = await list({ path: "picture-submissions/" });
+    fileList.value = response.items.map((item: { path: string }) => item.path);
   } catch (error) {
     console.error("Fehler beim Laden der Dateien", error);
   }
