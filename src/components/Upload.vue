@@ -2,24 +2,28 @@
 import { ref } from "vue";
 import { uploadData } from "aws-amplify/storage";
 
-const fileInput = ref(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 const triggerFileSelect = () => {
-  fileInput.value.click();
+  fileInput.value?.click();
 };
 
 const uploadFile = async (event: Event) => {
-  const selectedFile = event.target.files[0];
+  const target = event.target as HTMLInputElement;
+  const selectedFile = target.files?.[0];
   if (!selectedFile) return;
 
   const fileReader = new FileReader();
   fileReader.readAsArrayBuffer(selectedFile);
 
   fileReader.onload = async (e) => {
-    console.log("Datei erfolgreich gelesen!", e.target.result);
+    const result = e.target?.result;
+    if (!result) return;
+
+    console.log("Datei erfolgreich gelesen!", result);
     try {
       await uploadData({
-        data: e.target.result,
+        data: result,
         path: `picture-submissions/${selectedFile.name}`,
       });
       console.log("Upload erfolgreich!");
