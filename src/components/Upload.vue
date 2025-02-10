@@ -54,7 +54,7 @@ const uploadFile = async (event: Event) => {
       const path = `picture-submissions/${selectedFile.name}`;
       await uploadData({ data: result, path });
       const linkToStorageFile = await getUrl({ path });
-      fileList.value.push({ name: selectedFile.name, url: linkToStorageFile.url });
+      fileList.value.push({ name: selectedFile.name, url: linkToStorageFile.url.toString() });
     } catch (error) {
       console.error("Fehler beim Hochladen", error);
     }
@@ -67,7 +67,7 @@ const fetchFileList = async () => {
     fileList.value = await Promise.all(
         response.items.map(async (item: { path: string }) => {
           const linkToStorageFile = await getUrl({ path: item.path });
-          return { name: item.path.split('/').pop() || "", url: linkToStorageFile.url };
+          return { name: item.path.split('/').pop() || "", url: linkToStorageFile.url.toString() }
         })
     );
   } catch (error) {
