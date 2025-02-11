@@ -38,27 +38,35 @@ const deleteSelectedFiles = async () => {
   }
 };
 
-const uploadFile = async (event: Event) => {
+const uploadFiles = async (event: Event) => {
   const target = event.target as HTMLInputElement;
-  const selectedFile = target.files?.[0];
-  if (!selectedFile) return;
+  const files = target.files;
+  if (!files || files.length === 0) return;
 
-  const fileReader = new FileReader();
-  fileReader.readAsArrayBuffer(selectedFile);
+  const uploadPromises = Array.from(files).map(async (file) => {
+    const fileReader = new FileReader();
+    fileReader.readAsArrayBuffer(file);
 
-  fileReader.onload = async (e) => {
-    const result = e.target?.result;
-    if (!result) return;
+    return new Promise<void>((resolve, reject) => {
+      fileReader.onload = async (e) => {
+        const result = e.target?.result;
+        if (!result) return reject("Fehler beim Lesen der Datei");
 
-    try {
-      const path = `picture-submissions/${selectedFile.name}`;
-      await uploadData({ data: result, path });
-      const linkToStorageFile = await getUrl({ path });
-      fileList.value.push({ name: selectedFile.name, url: linkToStorageFile.url.toString() });
-    } catch (error) {
-      console.error("Fehler beim Hochladen", error);
-    }
-  };
+        try {
+          const path = `picture-submissions/${file.name}`;
+          await uploadData({ data: result, path });
+          const linkToStorageFile = await getUrl({ path });
+          fileList.value.push({ name: file.name, url: linkToStorageFile.url.toString() });
+          resolve();
+        } catch (error) {
+          console.error("Fehler beim Hochladen", error);
+          reject(error);
+        }
+      };
+    });
+  });
+
+  await Promise.all(uploadPromises);
 };
 
 const fetchFileList = async () => {
@@ -80,8 +88,8 @@ onMounted(fetchFileList);
 
 <template>
   <div>
-    <input type="file" ref="fileInput" @change="uploadFile" style="display: none" />
-    <button @click="triggerFileSelect">Datei auswählen & Hochladen</button>
+    <input type="file" ref="fileInput" @change="uploadFiles" multiple style="display: none" />
+    <button @click="triggerFileSelect">Dateien auswählen & Hochladen</button>
     <button @click="deleteSelectedFiles" :disabled="selectedFiles.size === 0">Ausgewählte Dateien löschen</button>
     <ul>
       <li v-for="file in fileList" :key="file.name">
