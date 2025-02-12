@@ -30,8 +30,9 @@ const deleteSelectedFiles = async () => {
         })
     );
 
-    fileList.value = fileList.value.filter(file => !selectedFiles.value.has(file.name));
+    // Listen nach dem Löschen aktualisieren
     selectedFiles.value.clear();
+    await fetchFileList(); // Erneutes Laden der aktuellen Datei-Liste aus der Cloud
     console.log("Ausgewählte Dateien wurden gelöscht.");
   } catch (error) {
     console.error("Fehler beim Löschen der Dateien", error);
@@ -67,7 +68,11 @@ const uploadFiles = async (event: Event) => {
   });
 
   await Promise.all(uploadPromises);
+
+  // Datei-Input leeren, um erneute Uploads zu ermöglichen
+  target.value = "";
 };
+
 
 const fetchFileList = async () => {
   try {
