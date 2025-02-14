@@ -1,8 +1,8 @@
+/* main.css: Grundlegende Layout-Anpassungen */
 body {
   margin: 0;
-  background: linear-gradient(180deg, rgb(117, 81, 194), rgb(255, 255, 255));
+  background: #f3f3f3;  /* Heller, neutraler Hintergrund */
   display: flex;
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   height: 100vh;
   width: 100vw;
   justify-content: center;
@@ -13,53 +13,173 @@ main {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  width: 80%;
+  max-width: 900px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 20px;
 }
 
+/* Professionelle Button-Stile */
 button {
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  padding: 8px 12px;
+  font-size: 0.95em;
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #0078D7;  /* Windows-Akzentblau */
+  color: #fff;
   cursor: pointer;
-  transition: border-color 0.25s;
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.25s, border-color 0.25s;
 }
+
 button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  background-color: #005ea6;
 }
 
-ul {
-  padding-inline-start: 0;
-  margin-block-start: 0;
-  margin-block-end: 0;
-  list-style-type: none;
+/* Tabellen-Stile für die Dateiansicht */
+.file-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+/* Tabellenkopf */
+.file-table th {
+  background: #0078D7; /* Akzentblau */
+  color: white;
+  padding: 10px;
+  text-align: left;
+  border-bottom: 2px solid #005ea6;
+  font-size: 0.9em;
+}
+
+/* Tabellenzellen */
+.file-table td {
+  padding: 10px;
+  border-bottom: 1px solid #e1e1e1;
+  font-size: 0.9em;
+  color: #333;
+}
+
+/* Hover-Effekt für Zeilen */
+.file-table tr:hover {
+  background: #f3faff; /* Leichter Blauton */
+}
+
+/* Markierte Zeile */
+.selected {
+  background-color: #e6f4ff !important;
+}
+
+/* Container für File-Actions */
+.file-actions {
   display: flex;
-  flex-direction: column;
-  margin: 8px 0;
-  border: 1px solid black;
-  gap: 1px;
-  background-color: black;
-  border-radius: 8px;
-  overflow: auto;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-li {
-  background-color: white;
+/* Icon-Stile in Buttons */
+.icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+/* Beispiel-Icons als SVG-Daten-URLs */
+/* Upload-Icon */
+.icon-upload {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMC41IDguNUgxNC41VjEwSDExVjE0SDVWMTAuNUgyMlYVjhN3LjUgNS41TDEwLjUgNS41TDkuNSAxMC41TDkuNSA4LjVaIi8+PC9zdmc+');
+}
+
+/* Delete-Icon */
+.icon-delete {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik00IDRIMTJMOC40IDNINDlWMTRINy40VjNIN1YxSDR2M1pNNC45IDhIMTAuMSBDMTAuNjkgOCAxMS4zIDggMTEuOSA4SDQuMUM0LjcgOCA1LjMgOCA1LjkgOEg4QzguNSw4IDguMSw4IDguNyw4eiBNNCw2SDEwVjEwSDRWMlpNOCw0SDhWNkg4eiIvPjwvc3ZnPg==');
+}
+
+/* Download-Icon */
+.icon-download {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik04IDFMOCA5SDZWMTEuNUg4VjE0SDhWMTEuNUgxMFY5SDhWMVoiLz48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTggMUw4IDlIOFYxMUg4VjExSDhWOUgxMFYxSDhWOVoiLz48L3N2Zz4=');
+}
+
+/* Falls ein Icon in einem Button vorhanden ist, etwas Abstand */
+button .icon {
+  margin-right: 6px;
+}
+
+/* Datei-Liste */
+.file-list {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: white;
+  padding: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.file-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.file-list li {
+  display: flex;
+  align-items: center;
   padding: 8px;
+  border-bottom: 1px solid var(--color-border);
 }
-
-li:hover {
-  background: #dadbf9;
+.file-list li:last-child {
+  border-bottom: none;
 }
-
-a {
-  font-weight: 800;
+.file-list li:hover {
+  background: var(--color-hover);
+}
+.file-list input[type="checkbox"] {
+  margin-right: 8px;
+}
+.file-list a {
+  color: var(--color-blue);
   text-decoration: none;
 }
+.file-list a:hover {
+  text-decoration: underline;
+}
+
+/* Suchfeld */
+.search-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+/* Container für Buttons */
+.file-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.s3-file-manager {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.right-column {
+  overflow-y: auto;
+}
+
