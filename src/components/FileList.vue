@@ -1,16 +1,35 @@
 <template>
-  <div>
-    <input v-model="localSearchQuery" placeholder="Dateiname suchen..." />
-    <ul>
-      <li v-for="file in filteredFiles" :key="file.name">
-        <input
-            type="checkbox"
-            @change="toggleFileSelection(file.name)"
-            :checked="selectedFiles.has(file.name)"
-        />
-        <a href="#" @click.prevent="openFileUrl(file)">{{ file.name }}</a>
-      </li>
-    </ul>
+  <div class="file-table-container">
+    <table class="file-table">
+      <thead>
+      <tr>
+        <th>Select</th>
+        <th>Name</th>
+        <th>Upload date</th>
+        <th>size</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr
+          v-for="file in filteredFiles"
+          :key="file.name"
+          :class="{ selected: selectedFiles.has(file.name) }"
+      >
+        <td>
+          <input
+              type="checkbox"
+              @change="toggleFileSelection(file.name)"
+              :checked="selectedFiles.has(file.name)"
+          />
+        </td>
+        <td>
+          <a href="#" @click.prevent="openFileUrl(file)">{{ file.name }}</a>
+        </td>
+        <td>{{ formatDate(file.uploadedAt) }}</td>
+        <td>{{ formatFileSize(file.size) }}</td>
+      </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -42,19 +61,30 @@ const toggleFileSelection = (fileName: string) => {
 
 const openFileUrl = async (file: FileItem) => {
   try {
-    // getUrl nur beim tatsächlichen Öffnen der Datei aufrufen
     const fileUrl = await getUrl({
       path: file.path,
-      options: { expiresIn: 5 }
+      options: { expiresIn: 5 },
     });
-    const url = fileUrl.url.toString();
-
-    // URL direkt im neuen Tab öffnen
-    window.open(url, "_blank");
+    window.open(fileUrl.url.toString(), "_blank");
   } catch (error) {
     console.error(`Fehler beim Laden der URL für ${file.name}`, error);
   }
 };
 
-defineExpose({});
+const formatDate = (dateString: string | undefined): string => {
+  if (!dateString) return "Unbekannt";
+  return new Date(dateString).toLocaleString();
+};
+
+const formatFileSize = (size: number | undefined): string => {
+  if (!size) return "Unbekannt";
+  const units = ["Bytes", "KB", "MB", "GB", "TB"];
+  let unitIndex = 0;
+  let formattedSize = size;
+  while (formattedSize >= 1024 && unitIndex < units.length - 1) {
+    formattedSize /= 1024;
+    unitIndex++;
+  }
+  return `${formattedSize.toFixed(2)} ${units[unitIndex]}`;
+};
 </script>

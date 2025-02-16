@@ -1,11 +1,11 @@
 <!-- FileActions.vue -->
 <template>
-  <div>
-    <button @click="deleteSelectedFiles" :disabled="selectedFiles.size === 0">
-      Ausgewählte Dateien löschen
-    </button>
+  <div class="file-actions">
     <button @click="downloadSelectedFilesAsZip" :disabled="selectedFiles.size === 0">
-      Ausgewählte Dateien als ZIP herunterladen
+      Download
+    </button>
+    <button @click="deleteSelectedFiles" :disabled="selectedFiles.size === 0">
+      Delete
     </button>
   </div>
 </template>
@@ -24,29 +24,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "filesDeleted", updatedFileList: FileItem[]): void;
 }>();
-
-// Event, um den Parent darüber zu informieren, dass Dateien gelöscht wurden
-/*const emit = defineEmits<{
-  (e: "filesDeleted"): void;
-}>();*/
-
-/*const deleteSelectedFiles = async () => {
-  const filesToDelete = Array.from(props.selectedFiles);
-  if (filesToDelete.length === 0) return;
-
-  try {
-    await Promise.all(
-        filesToDelete.map(async (fileName) => {
-          const path = `picture-submissions/${fileName}`;
-          await remove({ path });
-        })
-    );
-    // Nachdem die Dateien gelöscht wurden, informieren wir den Parent:
-    emit("filesDeleted");
-  } catch (error) {
-    console.error("Fehler beim Löschen der Dateien", error);
-  }
-};*/
 
 const deleteSelectedFiles = async () => {
   const filesToDelete = Array.from(props.selectedFiles);
@@ -71,8 +48,6 @@ const deleteSelectedFiles = async () => {
     console.error("Fehler beim Löschen der Dateien", error);
   }
 };
-
-
 
 const downloadSelectedFilesAsZip = async () => {
   const filesToDownload = Array.from(props.selectedFiles);

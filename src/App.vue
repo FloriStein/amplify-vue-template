@@ -2,10 +2,7 @@
 
 import { Authenticator } from "@aws-amplify/ui-vue";
 import "@aws-amplify/ui-vue/styles.css";
-import Todos from './components/Todos.vue';
-import Upload from './components/Upload.vue';
 import FileManager from './components/FileManager.vue';
-
 
 </script>
 
@@ -14,11 +11,7 @@ import FileManager from './components/FileManager.vue';
     <authenticator>
       <template v-slot="{ signOut }">
         <FileManager />
-        <!-- //<Todos />
-        <Upload />-->
-        <div class="right-column">
-          <button @click="signOut">Sign Out</button>
-        </div>
+          <button class="left-column" @click="signOut">Sign Out</button>
       </template>
     </authenticator>
   </main>

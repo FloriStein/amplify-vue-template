@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="file-uploader">
     <input
         type="file"
         ref="fileInput"
@@ -7,7 +7,7 @@
         multiple
         style="display: none"
     />
-    <button @click="triggerFileSelect">Dateien auswählen & Hochladen</button>
+    <button @click="triggerFileSelect">Upload</button>
   </div>
 </template>
 

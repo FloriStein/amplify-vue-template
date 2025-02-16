@@ -1,7 +1,8 @@
 <template>
-  <div class="s3-file-manager">
+  <div class="file-manager">
     <!-- Linke Spalte: Uploader und Aktionen -->
     <div class="left-column">
+      <FileSearch v-model="searchQuery" />
       <FileUploader @uploadComplete="handleUploadComplete" />
       <FileActions
           :selectedFiles="selectedFiles"
@@ -10,10 +11,10 @@
       />
     </div>
 
-    <!-- Rechte Spalte: Datei-Liste -->
+    <!-- Rechte Spalte: Suchfeld + Datei-Liste -->
     <div class="right-column">
       <FileList
-          :fileList="fileList"
+          :fileList="filteredFiles"
           :selectedFiles="selectedFiles"
           @toggleSelection="toggleFileSelection"
           @updateFile="updateFile"
@@ -24,50 +25,78 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { list, downloadData, getUrl } from "aws-amplify/storage";
 import type { FileItem } from "@/types/types";
 import FileUploader from "./FileUploader.vue";
 import FileActions from "./FileActions.vue";
 import FileList from "./FileList.vue";
-
+import FileSearch from "./FileSearch.vue";
 
 const fileList = ref<FileItem[]>([]);
 const selectedFiles = ref<Set<string>>(new Set());
+const searchQuery = ref(""); // Suchtext
+
+// Gefilterte Datei-Liste basierend auf Suchbegriff
+const filteredFiles = computed(() =>
+    fileList.value.filter((file) =>
+        file.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+);
 
 const fetchFileList = async () => {
   try {
     const response = await list({ path: "metadata/" });
-    fileList.value = (
-        await Promise.all(
-            response.items.map(async (item) => {
-              try {
-                const metadataResponse = await downloadData({ path: item.path });
-                const metadataData = await metadataResponse.result;
-                if (metadataData.body instanceof Blob) {
-                  const metadataText = await metadataData.body.text();
-                  if (!metadataText) return null;
-                  const metadata = JSON.parse(metadataText);
-                  return {
-                    name: metadata.fileName,
-                    path: metadata.filePath
-                    // URL wird nicht direkt geladen, sondern nur bei Bedarf
-                  };
-                } else {
-                  console.error("Unerwartetes Format von metadataData:", metadataData);
-                  return null;
-                }
-              } catch (error) {
-                console.error("Fehler beim Abrufen der Metadaten:", error);
-                return null;
-              }
-            })
-        )
-    ).filter((item): item is FileItem => item !== null);
+    const files = await Promise.all(
+        response.items.map(async (item) => {
+          try {
+            const metadataResponse = await downloadData({ path: item.path });
+            const metadataData = await metadataResponse.result;
+            if (metadataData.body instanceof Blob) {
+              const metadataText = await metadataData.body.text();
+              if (!metadataText) return null;
+              const metadata = JSON.parse(metadataText);
+
+              // Generiere Presigned URL für jedes File
+              const urlResponse = await getUrl({
+                path: metadata.filePath,
+                options: { expiresIn: 60 }
+              });
+
+              // Prüfe, ob uploadedAt und size vorhanden sind
+              console.log("Metadaten aus S3:", metadata);
+
+              // Übergebe alle notwendigen Metadaten an das FileItem
+              const fileItem: FileItem = {
+                name: metadata.fileName,
+                path: metadata.filePath,
+                size: metadata.size || 0,
+                uploadedAt: metadata.uploadedAt || "Unbekannt",
+                url: urlResponse.url.toString()
+              };
+
+              return fileItem;
+            } else {
+              console.error("Unerwartetes Format von metadataData:", metadataData);
+              return null;
+            }
+          } catch (error) {
+            console.error("Fehler beim Abrufen der Metadaten:", error);
+            return null;
+          }
+        })
+    );
+
+    // Filtere null-Werte und aktualisiere die Datei-Liste
+    fileList.value = files.filter((item): item is FileItem => item !== null);
+
   } catch (error) {
     console.error("Fehler beim Laden der Dateien", error);
   }
 };
+
+
+
 
 const getUrlOnDemand = async (file: FileItem) => {
   try {
