@@ -38,6 +38,22 @@ button {
   justify-content: center; /* Horizontale Zentrierung */
 }
 
+.app-header {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.sign-out-button:hover {
+  background-color: #005ea6;
+}
+
+.sign-out-container {
+  margin-top: auto; /* Schiebt den Button nach unten */
+  padding-top: 10px;
+}
+
 
 button:hover {
   background-color: #005ea6;
@@ -52,6 +68,9 @@ button:hover {
 
 /* Tabellenkopf */
 .file-table th {
+  top: 0;
+  /*z-index: 2;*/
+
   background: #0078D7; /* Akzentblau */
   color: white;
   padding: 10px;
@@ -119,9 +138,10 @@ button:hover {
 .search-input {
   width: 100%;
   padding: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid #e1e1e1;
   border-radius: 4px;
   margin-bottom: 10px;
+  box-sizing: border-box;
 }
 
 /* Container für Buttons */
@@ -140,22 +160,69 @@ button:hover {
   gap: 20px;
 }
 
+
+
+
+
 .file-manager {
   display: grid;
+  grid-template-columns: 120px 1fr; /* Linke Spalte: 120px, rechte Spalte: flexibler Platz */
   gap: 20px;
-  display:flex;
+  height: 100vh;
 }
 
+/* Linke Spalte bleibt unverändert */
 .left-column {
   display: flex;
-  align-items: stretch; /* Lässt Elemente die volle Breite einnehmen */
   flex-direction: column;
   gap: 20px;
   width: 120px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding-top: 70px; /* Fester Abstand nach oben */
+  padding-bottom: 20px;
 }
 
+/* Rechte Spalte als Flex-Container */
 .right-column {
-  overflow-y: auto;
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 600px;  /* Feste Breite für den Inhalt */
+  max-width: 100%; /* Verhindert Überlaufen bei kleineren Bildschirmen */
 }
+
+
+/* Dateiliste nimmt den verfügbaren Platz ein */
+.file-list-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Signout-Button Container – mit automatischem oberen Rand */
+.sign-out-container {
+  margin-top: auto; /* Schiebt den Button an das untere Ende der Spalte */
+  padding-top: 10px;
+  text-align: center; /* Zentriert den Button horizontal */
+}
+
+/* Optional: individuelle Button-Stile für den Signout-Button */
+.sign-out-button {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.95em;
+  background-color: #0078D7;
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+.sign-out-button:hover {
+  background-color: #005ea6;
+}
+
 
