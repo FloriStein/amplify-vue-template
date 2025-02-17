@@ -9,13 +9,11 @@
           :fileList="fileList"
           @filesDeleted="handleFilesDeleted"
       />
-
       <!-- Sign-Out Button unten in der linken Spalte -->
       <div class="sign-out-container">
         <button class="sign-out-button" @click="signOut">Sign Out</button>
       </div>
     </div>
-
     <!-- Rechte Spalte: Datei-Liste -->
     <div class="right-column">
       <div class="file-list-container">
@@ -94,8 +92,6 @@ const fetchFileList = async () => {
     console.error("Fehler beim Laden der Dateien", error);
   }
 };
-
-
 
 const toggleFileSelection = (fileName: string) => {
   if (selectedFiles.value.has(fileName)) {

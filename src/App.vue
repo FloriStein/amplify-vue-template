@@ -7,7 +7,6 @@ import FileManager from './components/FileManager.vue';
 <template>
   <authenticator>
     <template v-slot="{ signOut }">
-      <!-- FileManager mit übergebenem Sign-Out -->
       <FileManager :signOut="signOut" />
     </template>
   </authenticator>

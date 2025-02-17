@@ -6,7 +6,7 @@
         <th>Select</th>
         <th>Name</th>
         <th>Upload date</th>
-        <th>size</th>
+        <th>Size</th>
       </tr>
       </thead>
       <tbody>
