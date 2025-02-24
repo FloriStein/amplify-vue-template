@@ -21,6 +21,7 @@
     "aws-amplify": "^6.12.3",
     "file-saver": "^2.0.5",
     "graphql": "^15.10.1",
+    "graphql-request": "^7.1.2",
     "jszip": "^3.10.1",
     "vue": "^3.5.13"
   },

@@ -5,6 +5,6 @@ export const myApiFunction = defineFunction({
     entry: "./handler.ts",          // Pfad zur Datei mit der Lambda-Handler-Funktion
              // Node.js Runtime-Version (aktuellste LTS-Version)
     memoryMB: 512,
-    //runtime: "nodejs14.x",                   // 512 MB RAM
+    runtime: 22,                   // 512 MB RAM
     timeoutSeconds: 10,             // Timeout von 10 Sekunden
 });

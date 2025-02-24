@@ -13,18 +13,17 @@ import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { storage } from "./storage/resource";
 
-// Definiere dein Backend mit den vorhandenen Ressourcen
 const backend = defineBackend({
   auth,
-  storage,
   data,
+  storage,
   myApiFunction,
 });
 
-// Erstelle einen neuen API-Stack
+// API-Stack erstellen
 const apiStack = backend.createStack("api-stack");
 
-// Erstelle ein neues REST API mit einer Stage "dev" und Standard-CORS-Einstellungen
+// REST API erstellen
 const myRestApi = new RestApi(apiStack, "RestApi", {
   restApiName: "myRestApi",
   deploy: true,
@@ -32,45 +31,57 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
     stageName: "dev",
   },
   defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS,
-    allowMethods: Cors.ALL_METHODS,
-    allowHeaders: Cors.DEFAULT_HEADERS,
+    allowOrigins: ["https://main.d248rsenz0szsk.amplifyapp.com/"], // Passe dies auf die vertrauenswürdigen Ursprünge an
+    allowMethods: Cors.ALL_METHODS, // Verfügbar für alle Methoden
+    allowHeaders: Cors.DEFAULT_HEADERS, // Standard-Header
   },
 });
 
-// Erstelle eine Lambda-Integration, die deine API-Funktion verwendet
+// Lambda-Integration erstellen
 const lambdaIntegration = new LambdaIntegration(
     backend.myApiFunction.resources.lambda
 );
 
-// === Neuer Endpunkt: "/metadata" ===
-// Dieser Endpunkt ruft per GET-Methode die Meta-Daten aus der Datenbank ab.
-const metaDataPath = myRestApi.root.addResource("metadata", {
+// Endpunkt "/metadata" mit IAM-Authentifizierung
+const metadataPath = myRestApi.root.addResource("metadata", {
   defaultMethodOptions: {
-    authorizationType: AuthorizationType.IAM, // oder z. B. COGNITO, wenn du einen Authorizer nutzen möchtest
+    authorizationType: AuthorizationType.IAM, // IAM Authentifizierung
   },
 });
-metaDataPath.addMethod("GET", lambdaIntegration);
+metadataPath.addMethod("GET", lambdaIntegration); // Daten für alle Dateien
+metadataPath.addMethod("POST", lambdaIntegration); // Daten für Dateien hochladen
+metadataPath.addMethod("DELETE", lambdaIntegration); // Dateien löschen
+metadataPath.addMethod("PUT", lambdaIntegration); // Dateien aktualisieren
 
-// Optional: Falls du weitere Operationen (z. B. POST, PUT, DELETE) benötigst, kannst du diese hinzufügen
-// metaDataPath.addMethod("POST", lambdaIntegration);
-// metaDataPath.addMethod("PUT", lambdaIntegration);
-// metaDataPath.addMethod("DELETE", lambdaIntegration);
+// Endpunkt für einzelne Datei
+const fileMetadataPath = metadataPath.addResource("{fileName}", {
+  defaultMethodOptions: {
+    authorizationType: AuthorizationType.IAM, // IAM Authentifizierung
+  },
+});
+fileMetadataPath.addMethod("GET", lambdaIntegration); // Abfragen von Metadaten einer einzelnen Datei
+fileMetadataPath.addMethod("DELETE", lambdaIntegration); // Löschen einer Datei
+fileMetadataPath.addMethod("PUT", lambdaIntegration); // Aktualisieren einer Datei
 
-// (Optional) Beispiel: Ein weiterer Endpunkt mit Cognito-Authorizer
+// Proxy-Route für flexible API-Erweiterung
+metadataPath.addProxy({
+  anyMethod: true,
+  defaultIntegration: lambdaIntegration,
+});
+
+// Cognito-Authorizer erstellen für geschützte Endpunkte
 const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
   cognitoUserPools: [backend.auth.resources.userPool],
 });
-const secureMetaPath = myRestApi.root.addResource("secure-meta", {
-  defaultMethodOptions: {
-    authorizationType: AuthorizationType.COGNITO,
-  },
-});
-secureMetaPath.addMethod("GET", lambdaIntegration, {
+
+// Geschützter Endpunkt "/secure-metadata" mit Cognito-Authentifizierung
+const secureMetadataPath = myRestApi.root.addResource("secure-metadata");
+secureMetadataPath.addMethod("GET", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuth,
 });
 
-// Erstelle eine IAM-Policy, um den Zugriff (Invoke) auf die API zu erlauben
+// IAM-Policy für API-Zugriff erstellen
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
   statements: [
     new PolicyStatement({
@@ -78,18 +89,17 @@ const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
       resources: [
         `${myRestApi.arnForExecuteApi("*", "/metadata", "dev")}`,
         `${myRestApi.arnForExecuteApi("*", "/metadata/*", "dev")}`,
-        `${myRestApi.arnForExecuteApi("*", "/secure-meta", "dev")}`,
-        `${myRestApi.arnForExecuteApi("*", "/secure-meta/*", "dev")}`,
+        `${myRestApi.arnForExecuteApi("*", "/secure-metadata", "dev")}`,
       ],
     }),
   ],
 });
 
-// Hänge die Policy an die IAM-Rollen für authentifizierte und nicht authentifizierte Benutzer
+// Policy an authentifizierte und nicht authentifizierte IAM-Rollen anhängen
 backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(apiRestPolicy);
 backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(apiRestPolicy);
 
-// Füge Outputs hinzu, damit die API-Details in der Amplify-Konfiguration verfügbar sind
+// API-Details in die Amplify-Konfiguration ausgeben
 backend.addOutput({
   custom: {
     API: {

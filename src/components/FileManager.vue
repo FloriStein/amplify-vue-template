@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, defineProps } from "vue";
 import type { PropType } from "vue";
-import { list, getUrl, downloadData } from "aws-amplify/storage";
+import { ApiError, get } from "aws-amplify/api"; // 🚀 REST API von Amplify v2 nutzen
 import type { FileItem } from "@/types/types";
 import FileSearch from "./FileSearch.vue";
 import FileUploader from "./FileUploader.vue";
@@ -45,7 +45,7 @@ defineProps({
     type: Function as PropType<() => void>,
     required: true
   }
-})
+});
 
 const searchQuery = ref("");
 const fileList = ref<FileItem[]>([]);
@@ -57,43 +57,49 @@ const filteredFiles = computed(() =>
     )
 );
 
-const fetchFileList = async () => {
+// 📌 **Neue API-gestützte Methode zum Abrufen der Datei-Metadaten**
+const fetchFileList = async (): Promise<void> => {
   try {
-    const response = await list({ path: "metadata/" });
-    const items = await Promise.all(
-        response.items.map(async (item) => {
-          try {
-            const metadataResponse = await downloadData({ path: item.path });
-            const metadataData = await metadataResponse.result;
-            if (metadataData.body instanceof Blob) {
-              const metadataText = await metadataData.body.text();
-              if (!metadataText) return null;
-              const metadata = JSON.parse(metadataText);
-              return {
-                name: metadata.fileName,
-                path: metadata.filePath,
-                uploadedAt: metadata.uploadedAt,
-                size: metadata.size,
-              } as FileItem; // <-- Explizit als FileItem casten
-            } else {
-              console.error("Unerwartetes Format von metadataData:", metadataData);
-              return null;
-            }
-          } catch (error) {
-            console.error("Fehler beim Abrufen der Metadaten:", error);
-            return null;
-          }
-        })
-    );
+    const restOperation = get({
+      apiName: 'myRestApi',
+      path: '/metadata',
+    });
+    const { body } = await restOperation.response;
 
-    // Hier erfolgt das Filtern von null-Werten mit Type Guard
-    fileList.value = items.filter((item): item is FileItem => item !== null);
+    // Sicherstellen, dass der Body ein String ist und als JSON verarbeitet werden kann
+    if (body) {
+      const textBody = await body.text(); // Umwandlung des Body zu Text
+      try {
+        const response = JSON.parse(textBody); // Versuchen, den Body als JSON zu parsen
+        if (Array.isArray(response)) {
+          fileList.value = response.map((metadata: any) => ({
+            name: metadata.fileName,
+            path: metadata.filePath,
+            uploadedAt: metadata.uploadedAt,
+            size: metadata.size
+          }));
+        } else {
+          console.error('Antwort ist nicht im erwarteten Format:', response);
+        }
+      } catch (error) {
+        console.error('Fehler beim Parsen der Antwort:', error);
+      }
+    }
   } catch (error) {
-    console.error("Fehler beim Laden der Dateien", error);
+    if (error instanceof ApiError) {
+      if (error.response) {
+        const { statusCode, body } = error.response;
+        console.error(`Fehler beim Laden der Dateien: ${statusCode} - ${body}`);
+      } else {
+        console.error("API-Fehler ohne HTTP-Antwort:", error);
+      }
+    } else {
+      console.error("Unbekannter Fehler:", error);
+    }
   }
 };
 
-const toggleFileSelection = (fileName: string) => {
+const toggleFileSelection = (fileName: string): void => {
   if (selectedFiles.value.has(fileName)) {
     selectedFiles.value.delete(fileName);
   } else {
@@ -101,34 +107,59 @@ const toggleFileSelection = (fileName: string) => {
   }
 };
 
-const updateFile = (updatedFile: FileItem) => {
+const updateFile = (updatedFile: FileItem): void => {
   const index = fileList.value.findIndex(f => f.name === updatedFile.name);
   if (index !== -1) {
     fileList.value[index] = updatedFile;
   }
 };
 
-const handleUploadComplete = (uploadedFiles: FileItem[]) => {
+const handleUploadComplete = (uploadedFiles: FileItem[]): void => {
   fileList.value.push(...uploadedFiles);
 };
 
-const handleFilesDeleted = (updatedFileList: FileItem[]) => {
+const handleFilesDeleted = (updatedFileList: FileItem[]): void => {
   selectedFiles.value.clear();
   fileList.value = updatedFileList;
 };
 
-// Funktion für das Abrufen der URL bei Bedarf
+// 📌 **REST API-Aufruf für signierte URL (falls benötigt)**
 const getUrlOnDemand = async (file: FileItem): Promise<string | null> => {
   try {
-    const urlResponse = await getUrl({
-      path: file.path,
-      options: { expiresIn: 5 }
+    const restOperation = get({
+      apiName: 'myRestApi',
+      path: `/metadata/${file.name}`,
     });
-    return urlResponse.url.toString();
+    const { body } = await restOperation.response;
+
+    // Sicherstellen, dass der Body ein String ist und als JSON verarbeitet werden kann
+    if (body) {
+      const textBody = await body.text(); // Umwandlung des Body zu Text
+      try {
+        const response = JSON.parse(textBody); // Versuchen, den Body als JSON zu parsen
+        if (response && response.url) {
+          return response.url; // Rückgabe der URL
+        } else {
+          console.error('URL nicht im Antwort-Body gefunden:', response);
+        }
+      } catch (error) {
+        console.error('Fehler beim Parsen der Antwort:', error);
+      }
+    }
   } catch (error) {
-    console.error(`Fehler beim Laden der URL für ${file.name}`, error);
-    return null;
+    if (error instanceof ApiError) {
+      if (error.response) {
+        const { statusCode, body } = error.response;
+        console.error(`Fehler beim Laden der URL für ${file.name}: ${statusCode} - ${body}`);
+      } else {
+        console.error("API-Fehler ohne HTTP-Antwort:", error);
+      }
+    } else {
+      console.error(`Fehler beim Laden der URL für ${file.name}`, error);
+    }
+    return null; // Rückgabe von null im Fehlerfall
   }
+  return null; // Im Erfolgsfall sollte keine Rückgabe fehlen
 };
 
 onMounted(fetchFileList);
