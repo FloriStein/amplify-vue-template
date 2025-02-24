@@ -12,6 +12,8 @@ import { myApiFunction } from "./functions/api-function/resource";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { storage } from "./storage/resource";
+import { Duration } from "aws-cdk-lib"; // Stelle sicher, dass Duration importiert wird
+
 
 const backend = defineBackend({
   auth,
@@ -31,9 +33,13 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
     stageName: "dev",
   },
   defaultCorsPreflightOptions: {
-    allowOrigins: ["https://main.d248rsenz0szsk.amplifyapp.com/"], // Passe dies auf die vertrauenswürdigen Ursprünge an
+    allowOrigins: [
+        "https://main.d248rsenz0szsk.amplifyapp.com/",
+        "http://localhost:5176/"
+], // Passe dies auf die vertrauenswürdigen Ursprünge an
     allowMethods: Cors.ALL_METHODS, // Verfügbar für alle Methoden
     allowHeaders: Cors.DEFAULT_HEADERS, // Standard-Header
+    maxAge: Duration.seconds(86400), // maxAge muss als Duration angegeben werden
   },
 });
 
@@ -48,6 +54,21 @@ const metadataPath = myRestApi.root.addResource("metadata", {
     authorizationType: AuthorizationType.IAM, // IAM Authentifizierung
   },
 });
+
+// CORS für "/metadata" hinzufügen
+metadataPath.addMethod("OPTIONS", lambdaIntegration, {
+  methodResponses: [
+    {
+      statusCode: "200",
+      responseParameters: {
+        "method.response.header.Access-Control-Allow-Origin": true,
+        "method.response.header.Access-Control-Allow-Methods": true,
+        "method.response.header.Access-Control-Allow-Headers": true,
+      },
+    },
+  ],
+});
+
 metadataPath.addMethod("GET", lambdaIntegration); // Daten für alle Dateien
 metadataPath.addMethod("POST", lambdaIntegration); // Daten für Dateien hochladen
 metadataPath.addMethod("DELETE", lambdaIntegration); // Dateien löschen
@@ -59,15 +80,30 @@ const fileMetadataPath = metadataPath.addResource("{fileName}", {
     authorizationType: AuthorizationType.IAM, // IAM Authentifizierung
   },
 });
+
+// CORS für "/metadata/{fileName}" hinzufügen
+fileMetadataPath.addMethod("OPTIONS", lambdaIntegration, {
+  methodResponses: [
+    {
+      statusCode: "200",
+      responseParameters: {
+        "method.response.header.Access-Control-Allow-Origin": true,
+        "method.response.header.Access-Control-Allow-Methods": true,
+        "method.response.header.Access-Control-Allow-Headers": true,
+      },
+    },
+  ],
+});
+
 fileMetadataPath.addMethod("GET", lambdaIntegration); // Abfragen von Metadaten einer einzelnen Datei
 fileMetadataPath.addMethod("DELETE", lambdaIntegration); // Löschen einer Datei
 fileMetadataPath.addMethod("PUT", lambdaIntegration); // Aktualisieren einer Datei
 
 // Proxy-Route für flexible API-Erweiterung
-metadataPath.addProxy({
+/*metadataPath.addProxy({
   anyMethod: true,
   defaultIntegration: lambdaIntegration,
-});
+});*/
 
 // Cognito-Authorizer erstellen für geschützte Endpunkte
 const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {

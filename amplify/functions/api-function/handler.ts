@@ -1,4 +1,4 @@
-import type { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler } from "aws-lambda";
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 
 // Initialisiere den DynamoDB-Client für die Region, in der deine Tabelle liegt
@@ -14,10 +14,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         });
 
         const response = await client.send(command);
+        console.log("DynamoDB Response: ", response);
 
         // Mappen der Items in ein einfaches JSON-Format:
-        // Wir nehmen an, dass in DynamoDB folgende Attribute vorhanden sind:
-        // fileName (String), filePath (String), bucket (String), uploadedAt (String) und size (Number)
         const items = response.Items?.map((item) => ({
             fileName: item.fileName?.S,
             filePath: item.filePath?.S,
@@ -29,8 +28,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         return {
             statusCode: 200,
             headers: {
-                "Access-Control-Allow-Origin": "*", // Passe das ggf. an deine Domain an
-                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Origin": "*", // Erlaubt alle Ursprünge
+                "Access-Control-Allow-Headers": "*", // Erlaubt alle Header
             },
             body: JSON.stringify(items),
         };
